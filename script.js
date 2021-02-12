@@ -37,7 +37,7 @@ class Posts {
         for(let i = 0; i < str; i++) {
             let num = i + 1;
             element.insertAdjacentHTML('beforeend', `
-                <span>${num}</span>
+                <span class="paginationLink">${num}</span>
             `);
         }
 
@@ -46,6 +46,23 @@ class Posts {
     addPagination(element) {
         let page = 10;
         let paginationElem = document.querySelectorAll('.pagination span');
+        paginationElem[0].classList.add('bgLink');
+        let res = this.posts.slice(0, 10);
+
+        res.forEach(item => {
+            let firstPostId = JSON.stringify(item.id);
+            let firstPostUserId = JSON.stringify(item.userId);
+            let firstPostTitle = JSON.stringify(item.title);
+            let firstPostBody = JSON.stringify(item.body);
+            element.insertAdjacentHTML('beforeend', `
+            <div class="parentPost">
+                <div class="postId">${firstPostId}</div>
+                <div class="postUserId">${firstPostUserId}</div>
+                <div class="postTitle">${firstPostTitle}</div>
+                <div class="postBody">${firstPostBody}</div>
+            </div>
+            `);
+        })
 
         paginationElem.forEach(item => {
             item.addEventListener('click', () => {
@@ -55,10 +72,18 @@ class Posts {
                 let end = start + page;
                 let result = this.posts.slice(start, end);
                 result.forEach(item => {
-                    let post = JSON.stringify(item);
-                    element.insertAdjacentHTML('afterbegin', `
-                    <div class="post">${post}</div>
-                `);
+                    let postId = JSON.stringify(item.id);
+                    let postUserId = JSON.stringify(item.userId);
+                    let postTitle = JSON.stringify(item.title);
+                    let postBody = JSON.stringify(item.body);
+                    element.insertAdjacentHTML('beforeend', `
+                    <div class="parentPost">
+                        <div class="postId">${postId}</div>
+                        <div class="postUserId">${postUserId}</div>
+                        <div class="postTitle">${postTitle}</div>
+                        <div class="postBody">${postBody}</div>
+                    </div>
+                    `);
                 })
             })
         })
