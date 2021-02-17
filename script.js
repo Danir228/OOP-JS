@@ -9,7 +9,7 @@ class FetchData {
     }
 
     getPost = () => this.getResourse (
-        'http://jsonplaceholder.typicode.com/posts'
+        'https://jsonplaceholder.typicode.com/posts'
     )
 }
 
@@ -31,8 +31,8 @@ class Posts {
         this.posts.push(new Post(tweets));
     }
 
-    addPostCheckbox(checkbox) {
-        checkbox.insertAdjacentHTML('afterbegin', `
+    addPostCheckbox(parentSelector) {
+        parentSelector.insertAdjacentHTML('afterbegin', `
             <div class="checkbox_block">
                 <input class="checkbox_block_item" id="checkbox5" type="checkbox" checked="checked" value="5">
                 <label for="checkbox5">5 posts</label>
@@ -48,98 +48,106 @@ class Posts {
         `);
     }
 
-    addPaginationLink(pagination, defaultPostLength) {
-        let arrLength = this.posts.length;
-        let str = arrLength / defaultPostLength;
-        for(let i = 0; i < str; i++) {
-            let num = i + 1;
-            pagination.insertAdjacentHTML('beforeend', `
-                <span class="paginationLink">${num}</span>
-            `);
-        }
-    }
+    addPostDefault(parentSelector, pageNum, length) {
+        let start = (pageNum - 1) * length;
+        let end = start + length;
+        let array = this.posts.slice(start, end);
 
-    addPagination(parentSelector, defaultPostLength) {
-        let paginationLink = document.querySelectorAll('.pagination span');
-            paginationLink[0].classList.add('bgLink');
-
-        let res = this.posts.slice(0, defaultPostLength);
-
-        res.forEach(item => {
-            let firstPostId = JSON.stringify(item.id);
-            let firstPostUserId = JSON.stringify(item.userId);
-            let firstPostTitle = JSON.stringify(item.title);
-            let firstPostBody = JSON.stringify(item.body);
+        array.forEach(item => {
+            let firstPostId = item.id;
+            let firstPostTitle = item.title;
+            let firstPostBody = item.body;
             parentSelector.insertAdjacentHTML('beforeend', `
             <div class="parentPost">
                 <div class="postId">${firstPostId}</div>
-                <div class="postUserId">${firstPostUserId}</div>
                 <div class="postTitle">${firstPostTitle}</div>
                 <div class="postBody">${firstPostBody}</div>
             </div>
             `);
         })
+    }
 
-        paginationLink.forEach(item => {
-            item.addEventListener('click', () => {
-                parentSelector.innerHTML = '';
-                let pageNum = +item.innerHTML;
-                let start = (pageNum - 1) * defaultPostLength;
-                let end = start + defaultPostLength;
-                let result = this.posts.slice(start, end);
-                result.forEach(item => {
-                    let postId = JSON.stringify(item.id);
-                    let postUserId = JSON.stringify(item.userId);
-                    let postTitle = JSON.stringify(item.title);
-                    let postBody = JSON.stringify(item.body);
-                    parentSelector.insertAdjacentHTML('beforeend', `
-                    <div class="parentPost">
-                        <div class="postId">${postId}</div>
-                        <div class="postUserId">${postUserId}</div>
-                        <div class="postTitle">${postTitle}</div>
-                        <div class="postBody">${postBody}</div>
-                    </div>
-                    `);
-                })
-            })
-        })
+    iterationPaginationLink(parentSelector, index, length) {
+        for(let i = index; i < length; i++) {
+            let num = i + 1;
+            parentSelector.insertAdjacentHTML('beforeend', `
+                <div class="paginationLink">${num}</div>
+            `);
+        }
+    }
+
+    addPaginationLink(parentSelector, index, length) {
+        let arrLength = this.posts.length;
+        let str = arrLength / length;
+        let indexResult = index - 2;
+
+        if (indexResult < 0) {
+            indexResult = 0;
+        }
+
+        let lengthLinks = indexResult + 5;
+
+        if (lengthLinks + 1 < str) {
+            this.iterationPaginationLink(parentSelector, indexResult, lengthLinks);
+        } else {
+            let indexResult2 = index + 2;
+
+            if (indexResult2 > str) {
+                indexResult2 = str;
+                parentSelector.insertAdjacentHTML('afterbegin', `
+                <div class="paginationLink">В начало</div>
+            `)
+            }
+
+            let lengthLinks2 = indexResult2 -5;
+
+            this.iterationPaginationLink(parentSelector, lengthLinks2, indexResult2);
+        }
     }
 
 }
 
 class Main {
-    constructor(pagination, parentSelector, checkbox) {
-        const fetchData = new FetchData();
+    constructor(paginationParent, postsParent, checkboxParent) {
         this.tweets = new Posts();
-        this.pagination = document.querySelector(pagination);
-        this.parentSelector = document.querySelector(parentSelector);
-        this.checkbox = document.querySelector(checkbox);
+        this.paginationParent = document.querySelector(paginationParent);
+        this.postsParent = document.querySelector(postsParent);
+        this.checkboxParent = document.querySelector(checkboxParent);
+
+        const fetchData = new FetchData();
 
         fetchData.getPost().then((data) => {
             data.forEach(this.tweets.addPost)
             this.renderPost();
-            this.showPaginationlink();
         });
+
+
     }
 
     renderPost() {
-        this.tweets.addPostCheckbox(this.checkbox);
+        this.tweets.addPostCheckbox(this.checkboxParent);
         this.checkedCheckbox();
-        this.tweets.addPaginationLink(this.pagination, this.defaultPostLength());
-        this.tweets.addPagination(this.parentSelector, this.defaultPostLength());
-        this.postLength();
-    }
-
-    showPaginationlink() {
-        let paginationLink = document.querySelectorAll('.pagination span');
-        paginationLink.forEach(item => {
-            item.addEventListener('click', () => {
-                paginationLink.forEach(item => {
-                    item.classList.remove('bgLink');
-                });
-                item.classList.add('bgLink');
-            })
-        });
+        this.tweets.addPostDefault(
+            this.postsParent,
+            1,
+            this.checkboxValue()
+        );
+        this.tweets.addPaginationLink(
+            this.paginationParent,
+            0,
+            this.checkboxValue()
+        );
+        this.showPaginationlinkDefault();
+        this.iterationCheckedCheckbox(
+            this.checkboxParent,
+            this.postsParent,
+            this.paginationParent
+        );
+        this.clickPaginationLink(
+            this.postsParent,
+            this.paginationParent,
+            this.checkboxValue()
+        );
     }
 
     checkedCheckbox() {
@@ -154,35 +162,73 @@ class Main {
         });
     }
 
-    defaultPostLength() {
+    checkboxValue() {
         let checkboxItem = document.querySelectorAll('.checkbox_block_item');
-        let postsNum = 0;
+        let valueCheck = 0;
         checkboxItem.forEach(item => {
             if (item.checked == true) {
-                postsNum = +item.value;
+                valueCheck = +item.value;
             }
         })
-        return postsNum
+        return valueCheck
     }
 
-    postLength() {
-        let checkboxItem = document.querySelectorAll('.checkbox_block_item');
-        checkboxItem.forEach(item => {
-            item.addEventListener('click', () => {
-                checkboxItem.forEach(item => {
-                    if (item.checked == true) {
-                        this.pagination.textContent = '';
-                        this.parentSelector.textContent = '';
-                        let postsNum = +item.value;
-                        this.tweets.addPaginationLink(this.pagination, postsNum);
-                        this.tweets.addPagination(this.parentSelector, postsNum);
-                        this.showPaginationlink();
-                    }
-                })
-            });
+    iterationCheckedCheckbox(checkboxParent, postsParent, paginationParent) {
+        checkboxParent.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.checked == true) {
+                postsParent.textContent = '';
+                paginationParent.textContent = '';
+                this.tweets.addPostDefault(
+                    postsParent,
+                    1,
+                    this.checkboxValue()
+                );
+                this.tweets.addPaginationLink(
+                    paginationParent,
+                    0,
+                    this.checkboxValue()
+                );
+                this.showPaginationlinkDefault();
+            }
         });
     }
 
+    showPaginationlinkDefault(index = 0) {
+        let paginationLink = document.querySelectorAll('.paginationLink');
+        paginationLink[index].classList.add('bgLink');
+    }
+
+    // showPaginationlink(element) {
+    //     element.classList.add('bgLink');
+    // }
+
+    clickPaginationLink(postsParent, paginationParent, length) {
+        paginationParent.addEventListener('click', (event) => {
+            const target = event.target;
+            let paginationLink = document.querySelectorAll('.paginationLink');
+            paginationLink.forEach(item => {
+                if (target === item) {
+                    postsParent.innerHTML = '';
+                    paginationParent.innerHTML = '';
+                    let pageNum = 0;
+                    pageNum = target.innerHTML;
+
+                    this.tweets.addPostDefault(
+                        postsParent,
+                        pageNum,
+                        length
+                    );
+                    this.tweets.addPaginationLink(
+                        paginationParent,
+                        pageNum,
+                        this.checkboxValue()
+                    );
+
+                }
+            })
+        });
+    }
 }
 
 new Main(

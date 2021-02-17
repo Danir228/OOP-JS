@@ -9,8 +9,8 @@ img {
 }
 
 body {
-    background: rgb(150, 170, 229);
-    font-size: 20px;
+    font-size: 15px;
+    background: #d6caca;
 }
 
 a {
@@ -66,7 +66,7 @@ a:hover {
 }
 
 .main {
-    margin-top: 150px;
+    margin-top: 50px;
 }
 
 .checkbox_block {
@@ -78,21 +78,28 @@ a:hover {
 }
 
 .posts {
-    margin-top: 100px;
+    height: 100%;
+    max-height: 500px;
+    margin-top: 10px;
+    overflow-y: auto;
 }
 
 .parentPost {
-    margin-bottom: 20px;
+    position: relative;
+    height: 90px;
+    margin-bottom: 5px;
     padding: 0 30px;
     text-align: center;
     line-height: 30px;
-    background-color: #a39659;
+    background-color: #9caeb4;
 
     border: 1px solid #a29119;
     border-radius: 55px 55px;
 }
 
 .postId {
+    position: absolute;
+    left: 0;
     font-size: 30px;
     color: #c70f0f;
     text-align: left;
@@ -100,14 +107,16 @@ a:hover {
 }
 
 .postTitle {
-    font-size: 20px;
+    font-size: 15px;
     color: #ffffff;
     text-transform: uppercase;
 }
 
 .pagination {
+    display: flex;
+    justify-content: center;
     text-align: center;
-    padding: 40px 0;
+    padding: 20px 0;
 }
 
 .pagination .paginationLink {
