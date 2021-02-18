@@ -67,13 +67,33 @@ class Posts {
         })
     }
 
-    iterationPaginationLink(parentSelector, index, length) {
+    iterationPaginationLink(parentSelector, index, length, selectIndex) {
         for(let i = index; i < length; i++) {
             let num = i + 1;
             parentSelector.insertAdjacentHTML('beforeend', `
-                <div class="paginationLink">${num}</div>
+                <div class="paginationLink ${i === selectIndex ? 'bgLink' : ''}">${num}</div>
             `);
         }
+    }
+
+    beginPagination(parentSelector, lengthLinks, length) {
+        parentSelector.insertAdjacentHTML('afterbegin', `
+            ${lengthLinks >= length + 1 ?
+                '<div class="pointsLeft"><div id="arrowLeft"><i class="fas fa-angle-double-left"></i>begin</div><span>...</span></div>'
+                :
+                ''
+            }
+        `)
+    }
+
+    endPagination(parentSelector, lengthLinks, length) {
+        parentSelector.insertAdjacentHTML('beforeend', `
+            ${lengthLinks <= length - 1 ?
+                '<div class="pointsRight"><div id="arrowRight"><i class="fas fa-angle-double-right"></i>end</div><span>...</span></div>'
+                :
+                ''
+            }
+        `)
     }
 
     addPaginationLink(parentSelector, index, length) {
@@ -85,24 +105,86 @@ class Posts {
             indexResult = 0;
         }
 
-        let lengthLinks = indexResult + 5;
+        let lengthLinks = str < 5 ? str : indexResult + 5;
 
-        if (lengthLinks + 1 < str) {
-            this.iterationPaginationLink(parentSelector, indexResult, lengthLinks);
+        if (lengthLinks <= str) {
+            this.iterationPaginationLink(
+                parentSelector,
+                indexResult,
+                lengthLinks,
+                index
+            );
+
+            this.endPagination(parentSelector, lengthLinks, str);
+            this.clickArrowPagination(
+                parentSelector,
+                Number(str - 5),
+                str,
+                "arrowRight"
+            );
+
+            this.beginPagination(parentSelector, lengthLinks, length);
+            this.clickArrowPagination(
+                parentSelector,
+                0,
+                length,
+                "arrowLeft"
+            );
         } else {
             let indexResult2 = index + 2;
 
-            if (indexResult2 > str) {
+            if (indexResult2 >= str) {
                 indexResult2 = str;
-                parentSelector.insertAdjacentHTML('afterbegin', `
-                <div class="paginationLink">В начало</div>
-            `)
             }
 
-            let lengthLinks2 = indexResult2 -5;
+            let lengthLinks2 = str < 5 ? str : indexResult2 - 5;
 
-            this.iterationPaginationLink(parentSelector, lengthLinks2, indexResult2);
+            this.iterationPaginationLink(
+                parentSelector,
+                lengthLinks2,
+                indexResult2,
+                index
+            );
+
+            this.beginPagination(parentSelector, lengthLinks2, length);
+            this.clickArrowPagination(
+                parentSelector,
+                0,
+                length,
+                "arrowLeft"
+            );
         }
+
+    }
+
+    clickArrowPagination(parentSelector, index, length, arrow) {
+        let arrowEl = document.getElementById(arrow);
+        if (arrowEl === null) return;
+        arrowEl.addEventListener('click', () => {
+            parentSelector.innerHTML = '';
+            this.iterationPaginationLink(
+                parentSelector,
+                index,
+                index === 0 ? 5 : length,
+            )
+            if (arrow === "arrowLeft") {
+                this.endPagination(parentSelector, index, length);
+                this.clickArrowPagination(
+                    parentSelector,
+                    index,
+                    length,
+                    "arrowRight"
+                );
+            } else {
+                this.beginPagination(parentSelector, length, index);
+                this.clickArrowPagination(
+                    parentSelector,
+                    0,
+                    length,
+                    "arrowLeft"
+                );
+            }
+        });
     }
 
 }
@@ -120,8 +202,6 @@ class Main {
             data.forEach(this.tweets.addPost)
             this.renderPost();
         });
-
-
     }
 
     renderPost() {
@@ -137,7 +217,6 @@ class Main {
             0,
             this.checkboxValue()
         );
-        this.showPaginationlinkDefault();
         this.iterationCheckedCheckbox(
             this.checkboxParent,
             this.postsParent,
@@ -145,8 +224,7 @@ class Main {
         );
         this.clickPaginationLink(
             this.postsParent,
-            this.paginationParent,
-            this.checkboxValue()
+            this.paginationParent
         );
     }
 
@@ -173,7 +251,11 @@ class Main {
         return valueCheck
     }
 
-    iterationCheckedCheckbox(checkboxParent, postsParent, paginationParent) {
+    iterationCheckedCheckbox(
+        checkboxParent,
+        postsParent,
+        paginationParent
+    ) {
         checkboxParent.addEventListener('click', (event) => {
             const target = event.target;
             if (target.checked == true) {
@@ -189,21 +271,14 @@ class Main {
                     0,
                     this.checkboxValue()
                 );
-                this.showPaginationlinkDefault();
             }
         });
     }
 
-    showPaginationlinkDefault(index = 0) {
-        let paginationLink = document.querySelectorAll('.paginationLink');
-        paginationLink[index].classList.add('bgLink');
-    }
-
-    // showPaginationlink(element) {
-    //     element.classList.add('bgLink');
-    // }
-
-    clickPaginationLink(postsParent, paginationParent, length) {
+    clickPaginationLink(
+        postsParent,
+        paginationParent
+    ) {
         paginationParent.addEventListener('click', (event) => {
             const target = event.target;
             let paginationLink = document.querySelectorAll('.paginationLink');
@@ -212,23 +287,25 @@ class Main {
                     postsParent.innerHTML = '';
                     paginationParent.innerHTML = '';
                     let pageNum = 0;
-                    pageNum = target.innerHTML;
+                    pageNum = +target.innerHTML - 1;
 
                     this.tweets.addPostDefault(
                         postsParent,
-                        pageNum,
-                        length
+                        pageNum + 1,
+                        this.checkboxValue()
                     );
                     this.tweets.addPaginationLink(
                         paginationParent,
-                        pageNum,
+                        Math.round(pageNum),
                         this.checkboxValue()
                     );
-
                 }
             })
         });
     }
+
+
+
 }
 
 new Main(

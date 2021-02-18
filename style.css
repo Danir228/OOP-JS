@@ -79,14 +79,14 @@ a:hover {
 
 .posts {
     height: 100%;
+    min-height: 500px;
     max-height: 500px;
-    margin-top: 10px;
-    overflow-y: auto;
+    margin-top: 40px;
+    overflow: auto;
 }
 
 .parentPost {
     position: relative;
-    height: 90px;
     margin-bottom: 5px;
     padding: 0 30px;
     text-align: center;
@@ -134,3 +134,35 @@ a:hover {
 .bgLink {
     background: #ffffff;
 }
+
+.pointsLeft {
+    margin-right: 15px;
+}
+
+.pointsLeft, .pointsRight {
+    position: relative;
+}
+
+.pointsLeft span {
+    position: absolute;
+    bottom: 0;
+}
+
+.pointsRight span {
+    position: absolute;
+    bottom: 0;
+}
+
+#arrowLeft {
+    position: absolute;
+    cursor: pointer;
+    right: 10px;
+}
+
+#arrowRight {
+    position: absolute;
+    margin-left: 20px;
+    cursor: pointer;
+}
+
+
